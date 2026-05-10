@@ -2,7 +2,7 @@
 ## Semana 1: Despliegue del Núcleo de Active Directory e Identity Management (IAM)
 
 ### 📊 Topología de la Red
-![Mapa de Red](Mapa%20de%20red.jpg)
+![Mapa de Red](../Mapa%20de%20red.jpg)
 
 ### 📋 Descripción General
 En esta primera etapa, establecí los cimientos de una infraestructura corporativa segura. Se configuró el Directorio Activo (AD DS) bajo el dominio **NaveaTech.local**, aplicando principios de segmentación y hardening inicial.
@@ -31,10 +31,10 @@ Se diseñó una estructura jerárquica de Unidades Organizativas (OUs) para sepa
 * Creación de cuenta administrativa nominal (`knavea`).
 
 ### 📸 Evidencia de Configuración
-![Dominio Correcto](Dominio%20correcto.jpg)
+![Dominio Correcto](../Dominio%20correcto.png)
 *Unión exitosa del cliente al dominio NaveaTech.local*
 
-![Login Exitoso](Inicio%20admin%20exitoso.jpg)
+![Login Exitoso](../Inicio%20admin%20exitoso.jpg)
 *Sesión iniciada con privilegios de Domain Admin*
 
 ---
