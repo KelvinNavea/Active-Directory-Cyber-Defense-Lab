@@ -120,7 +120,7 @@ Estas configuraciones se aplicaron directamente sobre la **`Default Domain Polic
 * **Restablecer el contador de bloqueos de cuenta después de:** Configurado en **`30` minutos**. Determina cuánto tiempo debe pasar entre intentos fallidos para que el contador interno de Windows vuelva a cero.
 
 #### B. Directiva de Contraseñas (*Password Policy*)
-* **Vigencia máxima de la contraseña:** Se estableció un tiempo estimado de **`90` días** para la expiración. Al cumplirse este plazo, el sistema operativo fuerza al usuario a renovar sus credenciales de forma mandatoria para mitigar la persistencia de contraseñas potencialmente filtradas.
+* **Vigencia máxima de la contraseña:** Se estableció un tiempo estimado de **`60` días** para la expiración. Al cumplirse este plazo, el sistema operativo fuerza al usuario a renovar sus credenciales de forma mandatoria para mitigar la persistencia de contraseñas potencialmente filtradas.
 * **Vigencia mínima de la contraseña:** Configurado en **`1` día** (evita que el usuario cambie la contraseña 24 veces seguidas el mismo día para volver a usar su clave vieja).
 * **Historial de contraseñas:** Se configuró recordar las últimas **`24` contraseñas**, bloqueando la reutilización inmediata de credenciales anteriores.
 ---
