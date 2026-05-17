@@ -69,23 +69,38 @@ Write-Host "[+] Estructura departamental y usuarios de prueba creados con éxito
 
 Con la topología de red y los objetos de Active Directory desplegados de forma automatizada, se procedió al endurecimiento del entorno utilizando exclusivamente Directivas de Grupo (**GPOs**) para mitigar vectores de ataque reales.
 
-### 1. Aislamiento de Privilegios (Tiering mediante Grupos Restringidos)
-El uso de cuentas de alto privilegio como *Administrador del Dominio* (Tier 0) para tareas cotidianas de soporte técnico en puestos de usuario (Tier 2) expone credenciales críticas a ataques de extracción en memoria (Credential Dumping vía LSASS). 
+### 1. Aislamiento de Privilegios (Tiering de Identidades y Restricción de Logueo)
+El uso de cuentas con privilegios jerárquicos de **Tier 0** (como `Domain Admins` o el `Administrador` nativo del dominio) para tareas rutinarias en estaciones de trabajo de **Tier 2** expone credenciales críticas a técnicas de extracción de memoria (*Credential Dumping* vía `lsass.exe`). Si un equipo cliente se ve comprometido, un atacante podría extraer el hash del Administrador del Dominio, logrando el compromiso total de la infraestructura (movimiento lateral horizontal y vertical).
 
-Para mitigar este riesgo y aislar los privilegios:
-1. Se configuró la directiva `GPO_Configuracion_Soporte_Local` vinculada directamente a la `OU_EQUIPOS`.
-2. Dentro del Editor de GPO, se navegó a: `Configuración del equipo` > `Directivas` > `Configuración de Windows` > `Configuración de seguridad` > `Grupos restringidos`.
+Para mitigar este vector de ataque, se aplicó una estrategia de Tiering simétrica dividida en dos directivas estrictas:
+
+#### A. GPO de Restricción e Inhabilitación de Logueo (Tier 0 en Tier 2)
+Para bloquear de forma mandatoria que las credenciales de alta jerarquía toquen las estaciones de trabajo, se configuró una directiva vinculada a la **`OU_EQUIPOS`**:
+
+1. **Ruta de la directiva:** `Configuración del equipo` > `Directivas` > `Configuración de Windows` > `Configuración de seguridad` > `Directivas locales` > `Asignación de derechos de usuario`.
+2. **Denegación de acceso local:** Se editó la directiva **"Denegar el inicio de sesión de forma local"** (Deny log on locally) y se añadieron explícitamente los grupos:
+   * `NAVEATECH\Domain Admins`
+   * `NAVEATECH\Enterprise Admins`
+3. **Denegación de acceso remoto:** Se editó la directiva **"Denegar el inicio de sesión a través de Servicios de Escritorio remoto"** (Deny log on through Remote Desktop Services), añadiendo los mismos grupos de Tier 0.
+
+**Resultado:** Si un Administrador del Dominio intenta iniciar sesión física o remotamente en la máquina cliente `CL-WKST-01`, el sistema operativo deniega el acceso de inmediato antes de generar cualquier proceso o token en memoria, neutralizando el vector de persistencia.
+
+#### B. GPO de Delegación Técnica (Grupos Restringidos para Soporte Local)
+Al quedar las cuentas de Tier 0 completamente bloqueadas para operar en la capa de usuario, se requirió delegar capacidades administrativas locales controladas para el personal de IT sin comprometer el dominio.
+
+1. Se configuró la directiva `GPO_Configuracion_Soporte_Local` vinculada a la `OU_EQUIPOS`.
+2. **Ruta de la directiva:** `Configuración del equipo` > `Directivas` > `Configuración de Windows` > `Configuración de seguridad` > `Grupos restringidos`.
 3. Se añadió el grupo global del dominio: **`NAVEATECH\G_IT_Soporte`**.
-4. En la sección **"Este grupo es miembro de:"**, se configuró el grupo nativo del sistema local: **`Administradores`** (mapeado desde la carpeta integrada `naveatech.local/Builtin`).
+4. En el apartado **"Este grupo es miembro de:"**, se inyectó el grupo local integrado de los endpoints: **`Administradores`**.
 
-**Resultado:** Al aplicar `gpupdate /force`, cualquier máquina unida a la `OU_EQUIPOS` inyecta automáticamente al grupo de técnicos como administradores locales. Esto permite realizar tareas de soporte completo sin comprometer las llaves maestras del dominio en estaciones de trabajo desprotegidas.
+**Resultado:** Las identidades globales de administración permanecen aisladas en su capa. El personal de IT opera sobre el entorno cliente utilizando exclusivamente una cuenta técnica intermedia (`knavea.tec`) que posee privilegios administrativos locales limitados de forma estricta a ese parque de equipos.
 
 ### 2. Control de Ejecución Perimetral (AppLocker)
 **El problema del "Gris de Seguridad":** Por defecto, un usuario sin privilegios administrativos no puede escribir en `C:\Program Files`. Sin embargo, muchas aplicaciones no autorizadas e instaladores de malware modernos evaden esta restricción instalándose en el espacio exclusivo del perfil de usuario: `C:\Users\<Usuario>\AppData\Local` o ejecutándose directamente desde la carpeta de descargas. Al tener control sobre su propia ruta, el usuario ejecuta software sin requerir elevación de UAC.
 
 **Solución mediante AppLocker:**
 1. **Configuración del Servicio Base:** Se forzó el arranque automático en las estaciones de trabajo del servicio encargado de interceptar los procesos: **Identidad de aplicación** (`AppIDSvc`), configurado a través de GPO en el nodo de `Servicios del sistema`.
-2. **Definición de Reglas Ejecutables:** En el nodo `Directivas de control de aplicaciones` > `AppLocker` > `Reglas ejecutables`, se generaron las **Reglas Predeterminadas** para permitir la ejecución legítima del sistema operativo en:
+2. **Definición de Reglas Ejecutables:** En el nodo `Directivas de control de aplicaciones` > `AppLocker` > `Reglas ejecutables`, se generaron las **Reglas Predetermiandas** para permitir la ejecución legítima del sistema operativo en:
    * `%PROGRAMFILES%\*`
    * `%WINDIR%\*`
 3. **Modo de Cumplimiento:** Se modificaron las propiedades de AppLocker para pasar del estado de auditoría a la exigencia perimetral, marcando la opción de **Aplicar reglas** (Enforce rules) de manera mandatoria.
