@@ -85,7 +85,7 @@ Para bloquear de forma mandatoria que las credenciales de alta jerarquía toquen
 
 **Resultado:** Si un Administrador del Dominio intenta iniciar sesión física o remotamente en la máquina cliente `CL-WKST-01`, el sistema operativo deniega el acceso de inmediato antes de generar cualquier proceso o token en memoria, neutralizando el vector de persistencia.
 
-#### B. GPO de Delegación Técnica (Grupos Restringidos para Soporte Local)
+#### B. GPO de Delegación Técnico (Grupos Restringidos para Soporte Local)
 Al quedar las cuentas de Tier 0 completamente bloqueadas para operar en la capa de usuario, se requirió delegar capacidades administrativas locales controladas para el personal de IT sin comprometer el dominio.
 
 1. Se configuró la directiva `GPO_Configuracion_Soporte_Local` vinculada a la `OU_EQUIPOS`.
@@ -96,9 +96,13 @@ Al quedar las cuentas de Tier 0 completamente bloqueadas para operar en la capa 
 **Resultado:** Las identidades globales de administración permanecen aisladas en su capa. El personal de IT opera sobre el entorno cliente utilizando exclusivamente una cuenta técnica intermedia (`knavea.tec`) que posee privilegios administrativos locales limitados de forma estricta a ese parque de equipos.
 
 ### 2. Control de Ejecución Perimetral (AppLocker)
-**El problema del "Gris de Seguridad":** Por defecto, un usuario sin privilegios administrativos no puede escribir en `C:\Program Files`. Sin embargo, muchas aplicaciones no autorizadas e instaladores de malware modernos evaden esta restricción instalándose en el espacio exclusivo del perfil de usuario: `C:\Users\<Usuario>\AppData\Local` o ejecutándose directamente desde la carpeta de descargas. Al tener control sobre su propia ruta, el usuario ejecuta software sin requerir elevación de UAC.
 
-**Solución mediante AppLocker:**
+#### 📋 Contexto Operativo y Caso Real (Shadow IT)
+La implementación de esta directiva surge como respuesta directa a incidentes comunes en entornos corporativos reales. En la experiencia de campo del área, se detectó el despliegue no autorizado de la suite **WPS Office** por parte de usuarios finales. Al tratarse de un software que permite la instalación e interacción dentro del espacio del perfil de usuario sin requerir elevación de privilegios de Administrador (evadiendo el control de UAC), el personal lograba ejecutar código ajeno al catálogo homologado por la compañía.
+
+Esto introduce riesgos críticos de *Shadow IT*, fuga de información y potencial ejecución de vectores de persistencia si los binarios son descargados de fuentes no oficiales. Por lo tanto, la suite WPS Office se utiliza en este laboratorio **estrictamente como herramienta de prueba y simulación** para evaluar el comportamiento de los bloqueos perimetrales.
+
+#### 🔧 Solución e Implementación mediante AppLocker:
 1. **Configuración del Servicio Base:** Se forzó el arranque automático en las estaciones de trabajo del servicio encargado de interceptar los procesos: **Identidad de aplicación** (`AppIDSvc`), configurado a través de GPO en el nodo de `Servicios del sistema`.
 2. **Definición de Reglas Ejecutables:** En el nodo `Directivas de control de aplicaciones` > `AppLocker` > `Reglas ejecutables`, se generaron las **Reglas Predetermiandas** para permitir la ejecución legítima del sistema operativo en:
    * `%PROGRAMFILES%\*`
@@ -109,15 +113,15 @@ Al quedar las cuentas de Tier 0 completamente bloqueadas para operar en la capa 
 
 ## 🔬 Escenarios de Verificación y Auditoría de Roles (RBAC)
 
-Para comprobar la efectividad y el cumplimiento cruzado de las directivas en el laboratorio, se auditaron las estaciones de trabajo bajo dos perfiles con alcances totalmente opuestos:
+Para comprobar la efectividad y el cumplimiento cruzado de las directivas en el laboratorio, se auditaron las estaciones de trabajo bajo dos perfiles con alcances totalmente opuestos, utilizando la suite mencionada como elemento de control:
 
 ### Caso A: Validación del Rol Técnico (`knavea.tec`)
-* **Comportamiento observado:** El usuario inicia sesión en la máquina cliente (`CL-WKST-01`). Al estar integrado dentro de los administradores locales por la directiva de grupos restringidos, el sistema operativo le permite interactuar con instaladores tradicionales.
-* **Resultado:** Puede ejecutar e instalar software corporativo (como la suite WPS Office) de forma abierta y transparente. AppLocker valida que la identidad operativa del técnico cuenta con privilegios administrativos locales, permitiendo las tareas rutinarias de soporte técnico.
+* **Comportamiento observado:** El usuario inicia sesión en la máquina cliente (`CL-WKST-01`). Al estar integrado dentro de los administradores locales por la directiva de grupos restringidos, el sistema operativo le otorga capacidades de gestión sobre el endpoint.
+* **Resultado:** Puede ejecutar e instalar software corporativo (como la suite WPS Office, utilizada aquí como binario de prueba homologado para soporte) de forma abierta y transparente. AppLocker valida que la identidad operativa del técnico cuenta con privilegios administrativos locales, permitiendo las tareas rutinarias de soporte técnico.
 
 ### Caso B: Validación del Rol de Usuario Estándar (`ana.rrhh`)
-* **Comportamiento observado:** La usuaria descarga un binario, instalador portable o software no homologado que intenta instalarse de manera silenciosa dentro de su espacio de usuario (`Downloads` o carpetas de `AppData`).
-* **Resultado:** El motor del kernel intercepta la llamada del proceso. Al validar que la ruta del ejecutable pertenece al perfil de usuario y no a los directorios protegidos por el administrador (`Windows` o `Program Files`), AppLocker bloquea el binario en seco antes de tocar la memoria, arrojando el mensaje nativo de Windows:
+* **Comportamiento observado:** La usuaria descarga el instalador de la suite de uso no autorizado, el cual intenta procesar y ejecutar sus hilos silenciosamente dentro de su espacio de usuario (`Downloads` o carpetas de `AppData`).
+* **Resultado:** El motor del kernel intercepta la llamada del proceso. Al validar que la ruta del ejecutable pertenece al perfil de usuario y no a los directorios protegidos y autorizados por el administrador (`Windows` o `Program Files`), AppLocker bloquea el binario en seco antes de tocar la memoria, arrojando el mensaje nativo de Windows:
   > 🛑 **"El administrador del sistema bloqueó esta aplicación."**
 
 ---
