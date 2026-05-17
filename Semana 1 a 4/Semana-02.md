@@ -109,6 +109,20 @@ Esto introduce riesgos críticos de *Shadow IT*, fuga de información y potencia
    * `%WINDIR%\*`
 3. **Modo de Cumplimiento:** Se modificaron las propiedades de AppLocker para pasar del estado de auditoría a la exigencia perimetral, marcando la opción de **Aplicar reglas** (Enforce rules) de manera mandatoria.
 
+### 3. Directivas de Bloqueo de Cuenta y Expiración de Contraseñas (Account Policies)
+Para mitigar vectores de ataque por fuerza bruta, diccionarios o rociado de contraseñas (*Password Spraying*), se modificaron las directivas predeterminadas del dominio para forzar un ciclo de vida seguro de las credenciales y la suspensión temporal de identidades bajo sospecha de compromiso.
+
+Estas configuraciones se aplicaron directamente sobre la **`Default Domain Policy`** en el nodo: `Configuración del equipo` > `Directivas` > `Configuración de Windows` > `Configuración de seguridad` > `Directivas de cuenta`.
+
+#### A. Directiva de Bloqueo de Cuenta (*Account Lockout Policy*)
+* **Umbral de bloqueo de cuenta:** Se estableció en **`4` intentos de inicio de sesión no válidos**. Si un atacante o usuario erra la contraseña más de 4 veces consecutivas, la cuenta se inhabilita automáticamente en el controlador de dominio.
+* **Duración del bloqueo de cuenta:** Configurado en **`30` minutos**. Una vez bloqueada, la cuenta permanecerá inactiva durante este período a menos que un administrador de IT la desbloquee manualmente antes.
+* **Restablecer el contador de bloqueos de cuenta después de:** Configurado en **`30` minutos**. Determina cuánto tiempo debe pasar entre intentos fallidos para que el contador interno de Windows vuelva a cero.
+
+#### B. Directiva de Contraseñas (*Password Policy*)
+* **Vigencia máxima de la contraseña:** Se estableció un tiempo estimado de **`90` días** para la expiración. Al cumplirse este plazo, el sistema operativo fuerza al usuario a renovar sus credenciales de forma mandatoria para mitigar la persistencia de contraseñas potencialmente filtradas.
+* **Vigencia mínima de la contraseña:** Configurado en **`1` día** (evita que el usuario cambie la contraseña 24 veces seguidas el mismo día para volver a usar su clave vieja).
+* **Historial de contraseñas:** Se configuró recordar las últimas **`24` contraseñas**, bloqueando la reutilización inmediata de credenciales anteriores.
 ---
 
 ## 🔬 Escenarios de Verificación y Auditoría de Roles (RBAC)
