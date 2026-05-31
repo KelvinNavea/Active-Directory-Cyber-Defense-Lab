@@ -19,9 +19,9 @@ Para asegurar que los servidores de archivos se utilicen únicamente para fines 
     *   Se configuraron plantillas de filtrado para bloquear un grupo completo de extensiones ejecutables y de scripts críticos, incluyendo específicamente **`.exe` (ejecutables), `.ps1` (scripts de PowerShell) y `.vbs` (Visual Basic Scripts)**, entre otros.
     *   Se configuró la **Auditoría de filtros** para registrar cualquier intento de violación.
 *   **Validación de Auditoría:** 
-    *   Al realizar pruebas de copia de diversos tipos de archivos bloqueados desde la unidad Z:, el sistema denegó el acceso exitosamente en todos los casos.
-    *   Se capturó el **Event ID 8215 (Origen: SRMSVC)** en el Visor de Eventos (**Registros de Aplicaciones**).
-    *   El log detalla claramente el usuario responsable (`NAVEATECH\ana.rrh`), la ruta intentada y el archivo bloqueado (por ejemplo, `PruebaSeguridad.ps1`), proporcionando una trazabilidad completa del intento de acceso.
+    *   Realizamos pruebas de copia de diversos archivos bloqueados desde la unidad Z: utilizando la cuenta de usuario `NAVEATECH\ana.rrh`.
+    *   El sistema denegó el acceso exitosamente, y el evento fue capturado en el Visor de Eventos (**Registros de Aplicaciones**) bajo el **Event ID 8215 (Origen: SRMSVC)**.
+    *   Esta validación confirma que, aunque mi cuenta de soporte TI posee privilegios para administrar la política, el usuario final está correctamente restringido por las reglas implementadas.
 
 ## 🎯 Conclusión
 Al finalizar esta semana, hemos alcanzado hitos importantes en nuestra arquitectura defensiva:
@@ -33,3 +33,4 @@ Al finalizar esta semana, hemos alcanzado hitos importantes en nuestra arquitect
 ¡La infraestructura de `naveatech.local` es cada vez más resiliente y segura!
 
 ---
+*Documentado por: Kelvin Navea (Onsite IT Technician | Support Analyst)*
