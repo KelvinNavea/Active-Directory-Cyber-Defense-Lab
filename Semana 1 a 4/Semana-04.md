@@ -10,14 +10,16 @@ Implementamos configuraciones críticas para proteger la estructura del dominio 
 *   **Activación de la Papelera de Reciclaje (AD Recycle Bin):** Habilitamos la característica de Papelera de Reciclaje de Active Directory. Esto es fundamental para la recuperación de objetos borrados (usuarios, grupos, equipos) sin tener que recurrir a procesos de restauración autoritativa más complejos y riesgosos.
 
 ## 📂 Domingo: Filtrado de Archivos (FSRM) y Auditoría
-Para asegurar que los servidores de archivos se utilicen únicamente para fines productivos y autorizados, implementamos el Administrador de recursos del servidor de archivos (FSRM).
+Para asegurar que los servidores de archivos se utilicen únicamente para fines productivos y autorizados, implementamos el Administrador de recursos del servidor de archivos (FSRM) y configuramos el acceso para los usuarios.
 
-*   **Objetivo:** Restringir el almacenamiento de archivos potencialmente peligrosos o no autorizados en carpetas sensibles de RRHH.
-*   **Implementación:**
-    *   Se configuraron plantillas de filtrado para bloquear un grupo completo de extensiones ejecutables y de scripts, incluyendo **`.exe` (ejecutables), `.ps1` (PowerShell) y `.vbs` (Visual Basic Script)**, entre otros.
+*   **Configuración del Entorno:**
+    *   Creamos una carpeta compartida en el servidor en la ruta `\\SRV-AD-01\RecursosCompartidos\RRHH`.
+    *   Realizamos el mapeo de red de esta carpeta en el equipo del usuario (cliente) como la **unidad de red Z:**.
+*   **Implementación de Seguridad:**
+    *   Se configuraron plantillas de filtrado para bloquear un grupo completo de extensiones ejecutables y de scripts críticos, incluyendo específicamente **`.exe` (ejecutables), `.ps1` (scripts de PowerShell) y `.vbs` (Visual Basic Scripts)**, entre otros.
     *   Se configuró la **Auditoría de filtros** para registrar cualquier intento de violación.
 *   **Validación de Auditoría:** 
-    *   Al realizar pruebas de copia de diversos tipos de archivos bloqueados, el sistema denegó el acceso exitosamente en todos los casos.
+    *   Al realizar pruebas de copia de diversos tipos de archivos bloqueados desde la unidad Z:, el sistema denegó el acceso exitosamente en todos los casos.
     *   Se capturó el **Event ID 8215 (Origen: SRMSVC)** en el Visor de Eventos (**Registros de Aplicaciones**).
     *   El log detalla claramente el usuario responsable (`NAVEATECH\ana.rrh`), la ruta intentada y el archivo bloqueado (por ejemplo, `PruebaSeguridad.ps1`), proporcionando una trazabilidad completa del intento de acceso.
 
@@ -25,7 +27,7 @@ Para asegurar que los servidores de archivos se utilicen únicamente para fines 
 Al finalizar esta semana, hemos alcanzado hitos importantes en nuestra arquitectura defensiva:
 
 *   **Integridad:** Protección física y lógica de las OUs y objetos de AD.
-*   **Control:** Implementación de políticas de filtrado de archivos mediante FSRM para prevenir la ejecución de binarios y scripts no permitidos en el servidor.
+*   **Control:** Implementación de políticas de filtrado de archivos mediante FSRM para prevenir la ejecución de binarios y scripts no permitidos (.exe, .ps1, .vbs) en el servidor.
 *   **Detección:** Configuración de auditoría detallada, logrando centralizar y registrar intentos de acceso no autorizado con un nivel de detalle granular.
 
 ¡La infraestructura de `naveatech.local` es cada vez más resiliente y segura!
